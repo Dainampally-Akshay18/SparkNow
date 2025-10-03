@@ -4,7 +4,8 @@ import PropTypes from 'prop-types';
 import NewsItem from './NewsItem';
 
 const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://newsapi.org/v2';
+// const API_BASE = import.meta.env.VITE_API_BASE || 'https://newsapi.org/v2';
+const API_BASE = '/.netlify/functions/news'
 
 export default function News({ country = 'in', pageSize = 18, category = 'general', q = '' }) {
   const [articles, setArticles] = useState([]);
