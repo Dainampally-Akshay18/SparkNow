@@ -3,9 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import NewsItem from './NewsItem';
 
-const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
-// const API_BASE = import.meta.env.VITE_API_BASE || 'https://newsapi.org/v2';
-const API_BASE = '/.netlify/functions/news'
+// Correctly point to your Netlify Function endpoint
+const API_BASE = '/.netlify/functions/news';
 
 export default function News({ country = 'in', pageSize = 18, category = 'general', q = '' }) {
   const [articles, setArticles] = useState([]);
@@ -40,46 +39,42 @@ export default function News({ country = 'in', pageSize = 18, category = 'genera
   };
 
   const primaryRequest = useMemo(() => {
-    const headers = { 'X-Api-Key': API_KEY || '' };
+    // All parameters are now sent in the query string to our function
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+    });
 
+    // If it's a search, add the 'q' and 'sortBy' parameters
     if (mode === 'everything') {
-      const params = new URLSearchParams({
-        q: searchQuery.trim(),
-        language: 'en',
-        sortBy: sortBy,
-        page: String(page),
-        pageSize: String(pageSize),
-      });
-
-      // Add date filter if selected
+      params.set('q', searchQuery.trim());
+      params.set('sortBy', sortBy);
+      
       const fromDate = getDateRange();
       if (fromDate) {
         params.append('from', fromDate);
       }
-
-      return { url: `${API_BASE}/everything?${params.toString()}`, init: { headers }, endpoint: 'everything' };
+    } else {
+      // Otherwise, add 'country' and 'category' for top headlines
+      params.set('country', country);
+      params.set('category', category);
     }
-
-    const params = new URLSearchParams({
-      country,
-      category,
-      page: String(page),
-      pageSize: String(pageSize),
-    });
-
-    return { url: `${API_BASE}/top-headlines?${params.toString()}`, init: { headers }, endpoint: 'top-headlines' };
+    
+    // The URL now correctly points to our function with all params.
+    // No headers or API key are needed on the client-side anymore.
+    return { url: `${API_BASE}?${params.toString()}`, endpoint: mode };
   }, [mode, country, category, searchQuery, sortBy, dateRange, page, pageSize]);
 
   const fallbackRequest = useMemo(() => {
-    const headers = { 'X-Api-Key': API_KEY || '' };
+    // This creates a search-based fallback using the category name
     const params = new URLSearchParams({
       q: category,
-      language: 'en',
       sortBy: 'publishedAt',
       page: String(page),
       pageSize: String(pageSize),
     });
-    return { url: `${API_BASE}/everything?${params.toString()}`, init: { headers }, endpoint: 'everything(fallback)' };
+    // Correctly point to the Netlify function endpoint
+    return { url: `${API_BASE}?${params.toString()}`, endpoint: 'everything(fallback)' };
   }, [category, page, pageSize]);
 
   const startProgress = () => {
@@ -117,7 +112,8 @@ export default function News({ country = 'in', pageSize = 18, category = 'genera
 
     const fetchOnce = async (req) => {
       startProgress();
-      const res = await fetch(req.url, req.init);
+      // The `init` object with headers is no longer passed here
+      const res = await fetch(req.url); 
       const ok = res.ok;
       let payload = null;
       try {
@@ -134,7 +130,7 @@ export default function News({ country = 'in', pageSize = 18, category = 'genera
 
     const run = async () => {
       try {
-        if (!API_KEY) throw new Error('Missing VITE_NEWS_API_KEY');
+        // API Key check is removed from the client
         setStatus('loading');
         setErrorMsg('');
         setUsedEndpoint('');
