@@ -1,33 +1,38 @@
 // frontend/netlify/functions/news.js
 
 export const handler = async (event) => {
-  const { country, category, page, pageSize, q, sortBy, dateRange } = event.queryStringParameters;
+  // Get the query parameters from the request made by your React app
+  const { country, category, page, pageSize, q, sortBy } = event.queryStringParameters;
+  
+  // Access the API key securely from Netlify's environment variables
   const API_KEY = process.env.VITE_NEWS_API_KEY;
   const API_BASE = 'https://newsapi.org/v2';
 
-  let url;
-  if (q) {
-    const params = new URLSearchParams({
-      q,
-      language: 'en',
-      sortBy: sortBy || 'publishedAt',
-      page: page || '1',
-      pageSize: pageSize || '18',
-    });
-    if (dateRange) {
-       // Logic for handling dateRange would go here
-    }
-    url = `${API_BASE}/everything?${params.toString()}`;
-  } else {
-    const params = new URLSearchParams({
-      country: country || 'in',
-      category: category || 'general',
-      page: page || '1',
-      pageSize: pageSize || '18',
-    });
-    url = `${API_BASE}/top-headlines?${params.toString()}`;
+  // If the API key is not set, return an error immediately
+  if (!API_KEY) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'API key is not configured.' }),
+    };
   }
 
+  // Build the correct URL based on whether there's a search query 'q'
+  const params = new URLSearchParams();
+  let endpoint = 'top-headlines';
+
+  if (q && q.trim()) {
+    endpoint = 'everything';
+    params.set('q', q.trim());
+    params.set('sortBy', sortBy || 'publishedAt');
+  } else {
+    params.set('country', country || 'in');
+    params.set('category', category || 'general');
+  }
+  
+  params.set('page', page || '1');
+  params.set('pageSize', pageSize || '18');
+
+  const url = `${API_BASE}/${endpoint}?${params.toString()}`;
 
   try {
     const response = await fetch(url, {
@@ -36,23 +41,18 @@ export const handler = async (event) => {
       },
     });
 
-    if (!response.ok) {
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({ error: 'Failed to fetch news' }),
-      };
-    }
-
     const data = await response.json();
 
+    // Pass the response from the News API back to your frontend
     return {
-      statusCode: 200,
+      statusCode: response.status,
       body: JSON.stringify(data),
     };
+
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal Server Error' }),
+      body: JSON.stringify({ error: 'An internal error occurred.' }),
     };
   }
 };
