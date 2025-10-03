@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
-import Navbar from './components/Navbar';
+import Navbar from './Components/Navbar';
 
 // Debug component to see current route
 const RouteDebugger = () => {
@@ -10,8 +10,8 @@ const RouteDebugger = () => {
   return null;
 };
 
-const News = lazy(() => import('./components/News'));
-const About = lazy(() => import('./components/About'));
+const News = lazy(() => import('./Components/News'));
+const About = lazy(() => import('./Components/About'));
 
 export default function App() {
   return (
