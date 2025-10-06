@@ -85,7 +85,7 @@ export default function Navbar() {
                 </NavLink>
               ))}
               <Link to="/about" className="rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 text-center bg-white/5 text-[#E5E7EB]/90 hover:text-white" onClick={() => setOpen(false)}>
-                About Us
+                About
               </Link>
             </div>
           </div>
