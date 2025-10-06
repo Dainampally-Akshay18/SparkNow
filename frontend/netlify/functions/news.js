@@ -1,78 +1,90 @@
-// frontend/netlify/functions/news.js
-
+// netlify/functions/news.js
 export const handler = async (event) => {
-  // Get the query parameters sent from your React app
-  const { country, category, page, pageSize, q, sortBy, from } = event.queryStringParameters;
-  
-  // Access your API key securely from Netlify's environment variables
-  const API_KEY = process.env.VITE_NEWS_API_KEY;
-  const API_BASE = 'https://newsapi.org/v2';
+  // Safe destructuring with default
+  const qs = event?.queryStringParameters || {};
+  const { country, category, page, pageSize, q, sortBy, from, language } = qs;
 
-  // If the API key isn't set up in Netlify, return an error immediately
+  // Read API key; prefer VITE_NEWS_API_KEY, fallback to legacy if present
+  const API_KEY = process.env.VITE_NEWS_API_KEY || process.env.VITE_NEWSAPIKEY;
+  const usedEnv = process.env.VITE_NEWS_API_KEY
+    ? "VITE_NEWS_API_KEY"
+    : process.env.VITE_NEWSAPIKEY
+    ? "VITE_NEWSAPIKEY"
+    : "NONE";
+  console.info("[fn:news] qs:", qs);
+  console.info("[fn:news] env key used:", usedEnv);
+
   if (!API_KEY) {
-    console.error("API Key is missing.");
+    console.error("[fn:news] Missing API key");
     return {
       statusCode: 500,
       body: JSON.stringify({
         status: "error",
         code: "apiKeyMissing",
-        message: "The VITE_NEWS_API_KEY is not configured in the Netlify environment."
+        message:
+          "The VITE_NEWS_API_KEY is not configured in the Netlify environment.",
       }),
     };
   }
 
-  // Prepare the parameters for the News API call
+  const API_BASE = "https://newsapi.org/v2";
   const params = new URLSearchParams();
-  let endpoint = 'top-headlines'; // Default to top-headlines
+  let endpoint = "top-headlines";
 
-  // Check if the request is a search query (if 'q' exists)
   if (q && q.trim()) {
-    endpoint = 'everything';
-    params.set('q', q.trim());
-    params.set('sortBy', sortBy || 'publishedAt');
-    if (from) {
-      params.set('from', from);
-    }
+    endpoint = "everything";
+    params.set("q", q.trim());
+    params.set("sortBy", sortBy || "publishedAt");
+    if (from) params.set("from", from);
+    if (language) params.set("language", language); // supported only on everything
   } else {
-    // Otherwise, it's a request for top headlines by category
-    params.set('country', country || 'in');
-    params.set('category', category || 'general');
+    params.set("country", country || "in");
+    params.set("category", category || "general");
+    // no language for top-headlines
   }
-  
-  // Add pagination parameters for all requests
-  params.set('page', page || '1');
-  params.set('pageSize', pageSize || '18');
+
+  params.set("page", page || "1");
+  params.set("pageSize", pageSize || "18");
 
   const url = `${API_BASE}/${endpoint}?${params.toString()}`;
-  console.log(url)
+  console.info("[fn:news] endpoint:", endpoint);
+  console.info("[fn:news] url:", url);
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'X-Api-Key': API_KEY,
-      },
-    });
+    const response = await fetch(url, { headers: { "X-Api-Key": API_KEY } });
+    const contentType = response.headers.get("content-type") || "";
+    let data = null;
 
-    const data = await response.json();
-    
-    // If the News API returns an error (like 'apiKeyInvalid'), pass it through
-    if (response.status !== 200) {
-        console.error("News API returned an error:", data);
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error("[fn:news] Non-JSON from upstream:", text.slice(0, 200));
+      return {
+        statusCode: 502,
+        body: JSON.stringify({
+          status: "error",
+          message: "Upstream returned non-JSON.",
+        }),
+      };
     }
 
-    // Send the data from the News API back to your React app
-    return {
-      statusCode: response.status,
-      body: JSON.stringify(data),
-    };
+    console.info("[fn:news] status:", response.status);
 
-  } catch (error) {
-    console.error("Error fetching from News API:", error);
+    if (response.status !== 200) {
+      console.error("[fn:news] upstream error payload:", data);
+      return { statusCode: response.status, body: JSON.stringify(data) };
+    }
+
+    return { statusCode: 200, body: JSON.stringify(data) };
+  } catch (err) {
+    console.error("[fn:news] fetch error:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         status: "error",
-        message: "An internal error occurred while trying to contact the News API."
+        message:
+          "An internal error occurred while trying to contact the News API.",
       }),
     };
   }

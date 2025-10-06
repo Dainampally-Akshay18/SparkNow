@@ -1,3 +1,4 @@
+// NewsItem.jsx — light card aesthetics, performance-friendly hover, responsive media
 import React, { useMemo, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
@@ -19,7 +20,6 @@ export default function NewsItem({
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8x8AAwMCAO1P5R8AAAAASUVORK5CYII=";
 
   const cardRef = useRef(null);
-  const [hovered, setHovered] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   const [{ rx, ry, tz, scale }, api] = useSpring(() => ({
@@ -27,7 +27,7 @@ export default function NewsItem({
     ry: 0,
     tz: 0,
     scale: 1,
-    config: { tension: 280, friction: 20 }
+    config: { tension: 220, friction: 18 }
   }));
 
   const onMove = (e) => {
@@ -36,9 +36,9 @@ export default function NewsItem({
     const rect = el.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
-    const yaw = (px - 0.5) * 12;
-    const pitch = (0.5 - py) * 10;
-    api.start({ rx: pitch, ry: yaw, tz: 12, scale: 1.02 });
+    const yaw = (px - 0.5) * 8;
+    const pitch = (0.5 - py) * 6;
+    api.start({ rx: pitch, ry: yaw, tz: 8, scale: 1.01 });
   };
 
   const onLeave = () => {
@@ -48,11 +48,7 @@ export default function NewsItem({
   return (
     <animated.article
       ref={cardRef}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        onLeave();
-      }}
+      onMouseLeave={onLeave}
       onMouseMove={onMove}
       style={{
         transform: rx
@@ -63,108 +59,69 @@ export default function NewsItem({
                 scale.to((s) => `${rX} rotateY(${ryv}deg) translateZ(${z}px) scale(${s})`)
               )
             )
-          )
+          ),
       }}
       className="
         group relative flex flex-col rounded-2xl overflow-hidden
         [transform-style:preserve-3d] transition-all will-change-transform
-        border border-white/15 bg-gradient-to-br from-[#0f1b2e]/95 to-[#131d35]/95 
-        backdrop-blur-lg shadow-2xl shadow-black/40
-        ring-1 ring-white/10 hover:ring-white/20
-        focus-within:outline-none focus-within:ring-2
-        focus-within:ring-[#19b1ff]/80
+        border border-slate-200 bg-white shadow-sm hover:shadow-lg
+        focus-within:outline-none focus-within:ring-2 focus-within:ring-sky-500
       "
     >
-      {/* Enhanced media container */}
-      <div className="relative overflow-hidden">
-        <div className={`absolute inset-0 transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}>
-          <img
-            src={imageurl || transparentFallback}
-            alt={title}
-            onLoad={() => setImgLoaded(true)}
-            onError={(e) => {
-              e.currentTarget.src = transparentFallback;
-              setImgLoaded(true);
-            }}
-            className="
-              w-full h-52 sm:h-56 md:h-60 object-cover
-              transition-transform duration-700 group-hover:scale-110
-            "
-          />
-        </div>
-        
-        {/* Loading skeleton */}
+      {/* Media */}
+      <div className="relative">
+        <img
+          src={imageurl || transparentFallback}
+          alt={title || "News preview"}
+          onLoad={() => setImgLoaded(true)}
+          onError={(e) => {
+            e.currentTarget.src = transparentFallback;
+            setImgLoaded(true);
+          }}
+          className="w-full h-48 sm:h-52 md:h-56 object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          loading="lazy"
+        />
         {!imgLoaded && (
-          <div className="w-full h-52 sm:h-56 md:h-60 bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+          <div className="absolute inset-0 bg-slate-100 animate-pulse" />
         )}
-        
-        {/* Enhanced gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1429]/90 via-[#0a1429]/40 to-transparent" />
-        
-        {/* Enhanced source pill */}
+
+        {/* Source pill */}
         {source && (
-          <span className="absolute left-4 top-4 z-10 inline-flex items-center rounded-full bg-gradient-to-r from-[#19b1ff]/20 to-[#0a78ff]/20 backdrop-blur-lg px-3 py-1.5 text-xs font-semibold text-white border border-[#19b1ff]/30 shadow-lg">
-            {source}
-          </span>
+          <div className="absolute top-3 left-3">
+            <span className="inline-flex items-center rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 shadow-sm">
+              {source}
+            </span>
+          </div>
         )}
-        
-        {/* Hover effect overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#19b1ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
 
-      {/* Enhanced content */}
-      <div className="relative z-10 p-6 flex flex-col gap-4 flex-1">
-        <h3 className="text-lg font-bold leading-tight text-white group-hover:text-white/95 transition-colors line-clamp-3">
-          {title}
-        </h3>
-        
+      {/* Content */}
+      <div className="p-4 sm:p-5 grid gap-2">
+        <h3 className="text-base font-semibold text-slate-900 line-clamp-2">{title}</h3>
         {description && (
-          <p className="text-white/75 text-sm leading-relaxed line-clamp-3 flex-1">
-            {description}
-          </p>
+          <p className="text-sm text-slate-600 line-clamp-3">{description}</p>
         )}
-
-        <div className="flex items-center justify-between text-xs text-white/60 pt-2 border-t border-white/10">
-          <span className="truncate font-medium">By {author || "Unknown"}</span>
-          <time className="shrink-0 font-medium">{when}</time>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span>By {author || "Unknown"}</span>
+          <span>•</span>
+          <time>{when}</time>
         </div>
 
-        <div className="mt-2">
+        <div className="pt-1">
           <a
             href={newsurl}
             target="_blank"
             rel="noreferrer"
-            className="
-              group/btn inline-flex items-center gap-3 rounded-xl px-5 py-3
-              bg-gradient-to-r from-[#19b1ff] to-[#0a78ff]
-              text-white text-sm font-semibold
-              shadow-2xl shadow-[#19b1ff]/25
-              hover:shadow-[#19b1ff]/40 hover:scale-105
-              transition-all duration-300
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-[#19b1ff]/80
-              focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1b2e]
-            "
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium
+                       bg-sky-600 text-white hover:bg-sky-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             Read Full Story
-            <svg 
-              viewBox="0 0 24 24" 
-              className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" 
-              fill="none"
-            >
-              <path 
-                d="M5 12h14M13 5l7 7-7 7" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-              />
+            <svg width="14" height="14" viewBox="0 0 24 24" className="fill-current">
+              <path d="M13 5l7 7-7 7M5 12h14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </a>
         </div>
       </div>
-
-      {/* Enhanced corner accent */}
-      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-[#19b1ff]/10 to-transparent rounded-bl-2xl pointer-events-none" />
     </animated.article>
   );
 }
