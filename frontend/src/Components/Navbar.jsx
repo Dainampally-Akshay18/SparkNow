@@ -48,7 +48,7 @@ export default function Navbar() {
                 </NavLink>
               ))}
               <Link to="/about" className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-200 font-medium text-sm text-[#E5E7EB]/90 hover:text-white hover:bg-white/5">
-                About Us
+                About
               </Link>
             </div>
 
