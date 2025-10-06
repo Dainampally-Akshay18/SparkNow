@@ -1,8 +1,15 @@
-// Navbar.jsx — Light, elevated nav with mobile sheet; preserves routes
+// src/Components/Navbar.jsx
 import React, { useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 
 const categories = ["general","business","entertainment","health","science","sports","technology"];
+
+const NAVY = "#0B132B";
+const NAVY_HOVER = "#1C2541";
+const MINT = "#14B8A6";
+const TEXT = "#E5E7EB";
+const TEXT_DIM = "#B6C2CF";
+const LOGO_URL = "https://res.cloudinary.com/dadapse5k/image/upload/v1759479542/Gemini_Generated_Image_xw1mtuxw1mtuxw1m_bsfu8q.png";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -10,79 +17,81 @@ export default function Navbar() {
 
   const linkClass = ({ isActive }) =>
     [
-      "px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium",
-      "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-white",
-      isActive
-        ? "bg-sky-100 text-sky-800 shadow-sm border border-sky-200"
-        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+      "px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-200 font-medium text-sm",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#14B8A6] focus-visible:ring-offset-transparent",
+      isActive ? "text-white bg-[#1C2541]" : "text-[#E5E7EB]/90 hover:text-white hover:bg-white/5",
     ].join(" ");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white font-bold shadow-sm">S</span>
-            <span className="text-lg font-semibold tracking-tight text-slate-900">{brand}</span>
-          </Link>
-        </div>
+    <header className="sticky top-0 z-50">
+      <div className="w-full" style={{ background: `linear-gradient(180deg, ${NAVY} 0%, ${NAVY} 70%, rgba(12,20,45,0.92) 100%)` }}>
+        <nav className="relative mx-auto max-w-7xl px-3 sm:px-4">
+          <div className="flex items-center justify-between py-2 sm:py-3">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 no-underline group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-xl" onClick={() => setOpen(false)}>
+              <div className="relative h-9 w-9 sm:h-11 sm:w-11 rounded-xl overflow-hidden bg-white/5 shrink-0">
+                <img src={LOGO_URL} alt="SparkNow logo" loading="lazy" decoding="async" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,.25), transparent 60%)" }} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base sm:text-lg md:text-xl font-extrabold tracking-tight text-white">{brand}</span>
+                <span className="text-[10px] sm:text-[11px] md:text-xs font-semibold tracking-wide" style={{ color: TEXT_DIM }}>
+                  NEWS NETWORK
+                </span>
+              </div>
+            </Link>
 
-        <nav className="hidden md:flex items-center gap-2">
-          {categories.map((c) => (
-            <NavLink key={c} to={`/${c}`} className={linkClass}>
-              {c.charAt(0).toUpperCase() + c.slice(1)}
-            </NavLink>
-          ))}
-        </nav>
-
-        <button
-          onClick={() => setOpen(true)}
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-          aria-label="Open menu"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" className="fill-current">
-            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-
-      {/* mobile sheet */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/20" onClick={() => setOpen(false)} />
-          <div className="ml-auto h-full w-80 max-w-[85%] bg-white shadow-2xl border-l border-slate-200 animate-[slideIn_.2s_ease-out]">
-            <div className="h-16 px-4 border-b border-slate-200 flex items-center justify-between">
-              <span className="text-base font-semibold text-slate-900">{brand}</span>
-              <button
-                onClick={() => setOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-100"
-                aria-label="Close menu"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" className="stroke-slate-700">
-                  <path d="M6 6l12 12M6 18L18 6" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
+            {/* Desktop links */}
+            <div className="hidden lg:flex items-center gap-1.5">
+              {categories.map((c) => (
+                <NavLink key={c} to={`/${c}`} className={linkClass}>
+                  {c.charAt(0).toUpperCase() + c.slice(1)}
+                </NavLink>
+              ))}
+              <Link to="/about" className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-200 font-medium text-sm text-[#E5E7EB]/90 hover:text-white hover:bg-white/5">
+                About Us
+              </Link>
             </div>
-            <div className="p-2 grid gap-1">
+
+            {/* Mobile toggle */}
+            <button
+              type="button"
+              aria-label="Toggle menu"
+              onClick={() => setOpen((v) => !v)}
+              className="lg:hidden inline-flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-xl transition-all duration-200 hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)", color: TEXT }}
+            >
+              <svg className={`h-6 w-6 transition-all duration-200 ${open ? "rotate-90 scale-110" : ""}`} viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Mobile sheet */}
+          <div className={`lg:hidden overflow-hidden transition-[max-height,opacity] duration-400 ${open ? "max-h-[520px] opacity-100" : "max-h-0 opacity-0"}`}>
+            <div className="px-1 pb-3 grid grid-cols-2 gap-2">
               {categories.map((c) => (
                 <NavLink
                   key={c}
                   to={`/${c}`}
-                  onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     [
-                      "px-3 py-2 rounded-lg text-sm font-medium",
-                      isActive ? "bg-sky-100 text-sky-800" : "text-slate-700 hover:bg-slate-100"
+                      "rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 text-center",
+                      isActive ? "bg-[#1C2541] text-white" : "bg-white/5 text-[#E5E7EB]/90 hover:text-white",
                     ].join(" ")
                   }
+                  onClick={() => setOpen(false)}
                 >
                   {c.charAt(0).toUpperCase() + c.slice(1)}
                 </NavLink>
               ))}
+              <Link to="/about" className="rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 text-center bg-white/5 text-[#E5E7EB]/90 hover:text-white" onClick={() => setOpen(false)}>
+                About Us
+              </Link>
             </div>
           </div>
-        </div>
-      )}
+        </nav>
+      </div>
+      <div className="h-[2px] w-full" style={{ background: MINT }} />
     </header>
   );
 }

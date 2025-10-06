@@ -1,13 +1,10 @@
-# frontend/netlify.toml
-
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
+# SPA fallback for client routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[functions]
-    directory = "netlify/functions"
